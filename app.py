@@ -46,7 +46,7 @@ def update_rates():
     while True:
         global_rates = {pair: func() for pair, func in currency_pairs.items()}
         print("Rates updated:", global_rates)
-        time.sleep(5)
+        time.sleep(10)
 
 @app.route('/')
 def home():
