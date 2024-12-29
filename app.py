@@ -33,42 +33,35 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.7, 7.9), 4),
 }
 
+# Extract currencies
 currencies = set()
 for pair in currency_pairs.keys():
     base, quote = pair.split("/")
     currencies.update([base, quote])
 
-global_rates = {}
+# Initialize rates globally
+global_rates = {pair: func() for pair, func in currency_pairs.items()}
 
-#update rates every 5 secs
 def update_rates():
+    """Update Forex rates every 5 seconds."""
     global global_rates
     while True:
         global_rates = {pair: func() for pair, func in currency_pairs.items()}
         print("Rates updated:", global_rates)
-        time.sleep(10)
+        time.sleep(5)
 
-@app.route('/')
-def home():
-    return jsonify({
-        "message": "Welcome to the Forex API",
-        "endpoints": {
-            "/api/rates": "Fetch the latest Forex rates",
-        },
-        "documentation": "Add documentation URL here",
-    })
+@app.before_first_request
+def start_rate_updates():
+    """Start the rate update thread before the first request."""
+    threading.Thread(target=update_rates, daemon=True).start()
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
+    """API endpoint to fetch Forex rates."""
     return jsonify({
         "currencies": sorted(list(currencies)),
         "rates": global_rates
     })
 
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204 
-
 if __name__ == '__main__':
-    threading.Thread(target=update_rates, daemon=True).start()
     app.run(debug=True, port=5000)
