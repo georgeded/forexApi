@@ -1,10 +1,7 @@
 from flask import Flask, jsonify
+import random
 import threading
 import time
-import random
-import logging
-
-logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
@@ -36,36 +33,41 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.7, 7.9), 4),
 }
 
-#extract currencies from the keys of the pairs
 currencies = set()
 for pair in currency_pairs.keys():
     base, quote = pair.split("/")
     currencies.update([base, quote])
 
-rates_lock = threading.Lock()
 global_rates = {}
 
-
+#update rates every 5 secs
 def update_rates():
     global global_rates
     while True:
-        with rates_lock:
-            global_rates = {pair: func() for pair, func in currency_pairs.items()}
-        logging.info("Rates updated: %s", global_rates)
-        time.sleep(5)  #update every 5 secs
+        global_rates = {pair: func() for pair, func in currency_pairs.items()}
+        print("Rates updated:", global_rates)
+        time.sleep(5)
 
+@app.route('/')
+def home():
+    return jsonify({
+        "message": "Welcome to the Forex API",
+        "endpoints": {
+            "/api/rates": "Fetch the latest Forex rates",
+        },
+        "documentation": "Add documentation URL here",
+    })
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
-    with rates_lock:
-        rates = global_rates
-    if not rates:
-        return jsonify({"error": "Rates not available yet, please try again."}), 503
     return jsonify({
         "currencies": sorted(list(currencies)),
-        "rates": rates
+        "rates": global_rates
     })
 
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204 
 
 if __name__ == '__main__':
     threading.Thread(target=update_rates, daemon=True).start()
