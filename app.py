@@ -33,17 +33,14 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.7, 7.9), 4),
 }
 
-# Extract currencies
 currencies = set()
 for pair in currency_pairs.keys():
     base, quote = pair.split("/")
     currencies.update([base, quote])
 
-# Initialize rates globally
 global_rates = {pair: func() for pair, func in currency_pairs.items()}
 
 def update_rates():
-    """Update Forex rates every 5 seconds."""
     global global_rates
     while True:
         global_rates = {pair: func() for pair, func in currency_pairs.items()}
@@ -52,12 +49,10 @@ def update_rates():
 
 @app.before_first_request
 def start_rate_updates():
-    """Start the rate update thread before the first request."""
     threading.Thread(target=update_rates, daemon=True).start()
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
-    """API endpoint to fetch Forex rates."""
     return jsonify({
         "currencies": sorted(list(currencies)),
         "rates": global_rates
