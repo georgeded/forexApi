@@ -47,9 +47,12 @@ def update_rates():
         print("Rates updated:", global_rates)
         time.sleep(5)  # Update every 5 seconds
 
+@app.route('/')
+def hello():
+    return "Hello, this is the Forex API Service."
+
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
-    # Log the IP address for each HTTP request
     remote_addr = request.remote_addr
     print(f"HTTP request from {remote_addr}")
     return jsonify({
@@ -59,7 +62,6 @@ def get_forex_rates():
 
 @socketio.on('connect')
 def on_connect():
-    # Access the request context to get client address
     remote_addr = request.remote_addr
     print(f"WebSocket client connected from {remote_addr}")
 
@@ -72,4 +74,3 @@ if __name__ == '__main__':
     update_thread.daemon = True
     update_thread.start()
     socketio.run(app, debug=True, port=5000)
-
