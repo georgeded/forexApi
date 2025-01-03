@@ -53,6 +53,16 @@ def update_rates():
             rate = func()
             bid, ask = generate_bid_ask(rate)
             global_rates[pair] = {"rate": rate, "bid": bid, "ask": ask}
+        
+        if random.random() < 0.1:  # 10% chance to adjust rates
+            pair_to_adjust = random.choice(list(currency_pairs.keys()))
+            adjustment_factor = random.uniform(0.95, 1.05)  #adjust by ±5%
+            global_rates[pair_to_adjust]["rate"] *= adjustment_factor
+            global_rates[pair_to_adjust]["rate"] = round(global_rates[pair_to_adjust]["rate"], 4)
+            bid, ask = generate_bid_ask(global_rates[pair_to_adjust]["rate"])
+            global_rates[pair_to_adjust]["bid"] = bid
+            global_rates[pair_to_adjust]["ask"] = ask
+        
         print("Rates updated:", global_rates)
         time.sleep(5)
 
