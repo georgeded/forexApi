@@ -5,8 +5,8 @@ import time
 
 app = Flask(__name__)
 
-def generate_bid_ask(base_rate):
-    spread = base_rate * random.uniform(0.000005, 0.3) #wide spread
+def generate_bid_ask(base_rate, impact_factor=1.0):
+    spread = base_rate * random.uniform(0.0005 * impact_factor, 0.003 * impact_factor)  # Increased spread variability
     bid = round(base_rate - spread, 4)
     ask = round(base_rate + spread, 4)
     return bid, ask
@@ -39,6 +39,25 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.7, 7.9), 4),
 }
 
+impact_factors = {
+    "USD": 1.0,
+    "EUR": 1.0,
+    "GBP": 1.0,
+    "JPY": 1.0,
+    "CHF": 1.0,
+    "AUD": 1.0,
+    "CAD": 1.0,
+    "NZD": 1.0,
+    "SEK": 1.0,
+    "NOK": 1.0,
+    "ZAR": 1.0,
+    "INR": 1.0,
+    "BRL": 1.0,
+    "MXN": 1.0,
+    "SGD": 1.0,
+    "HKD": 1.0
+}
+
 currencies = set()
 for pair in currency_pairs.keys():
     base, quote = pair.split("/")
@@ -49,12 +68,16 @@ global_rates = {pair: {"rate": func(), "bid": None, "ask": None} for pair, func 
 def update_rates():
     global global_rates
     while True:
-        for pair, func in currency_pairs.items():
-            rate = func()
-            bid, ask = generate_bid_ask(rate)
-            global_rates[pair] = {"rate": rate, "bid": bid, "ask": ask}
-        print("Rates updated:", global_rates)
-        time.sleep(5)
+            for pair, rate_func in currency_pairs.items():
+                rate = rate_func()
+                base, quote = pair.split("/")
+                base_impact = impact_factors.get(base, 1.0)
+                quote_impact = impact_factors.get(quote, 1.0)
+                overall_impact = (base_impact + quote_impact) / 2
+                bid, ask = generate_bid_ask(rate, overall_impact)
+                global_rates[pair] = {"rate": rate, "bid": bid, "ask": ask}
+            print("Rates updated:", global_rates)
+            time.sleep(5)
 
 update_thread_started = False
 
