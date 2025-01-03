@@ -35,17 +35,23 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.7, 7.9), 4),
 }
 
-currencies = {currency for pair in currency_pairs for currency in pair.split('/')}
+currencies = set()
+for pair in currency_pairs.keys():
+    base, quote = pair.split("/")
+    currencies.update([base, quote])
 
 global_rates = {pair: func() for pair, func in currency_pairs.items()}
 
 def update_rates():
+    global global_rates
     while True:
-        for pair, func in currency_pairs.items():
-            global_rates[pair] = func()
-        socketio.emit('rate_update', {'rates': global_rates})
+        global_rates = {pair: func() for pair, func in currency_pairs.items()}
         print("Rates updated:", global_rates)
         time.sleep(5)
+
+@app.before_first_request
+def start_rate_updates():
+    threading.Thread(target=update_rates, daemon=True).start()
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
@@ -54,16 +60,5 @@ def get_forex_rates():
         "rates": global_rates
     })
 
-@socketio.on('connect')
-def on_connect():
-    print('Client connected')
-
-@socketio.on('disconnect')
-def on_disconnect():
-    print('Client disconnected')
-
 if __name__ == '__main__':
-    update_thread = threading.Thread(target=update_rates)
-    update_thread.daemon = True
-    update_thread.start()
-    socketio.run(app, debug=True, port=5000)
+    app.run(debug=True, port=5000)
