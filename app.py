@@ -6,11 +6,10 @@ import time
 app = Flask(__name__)
 
 def generate_bid_ask(base_rate):
-    if random.random() < 0.1:  
-        spread = base_rate * random.uniform(0.002, 0.01)  
+    if random.random() < 0.1:   
         spread = base_rate * random.uniform(0.0005, 0.0025)
-    bid = round(base_rate - spread, 4)
-    ask = round(base_rate + spread, 4)
+        bid = round(base_rate - spread, 4)
+        ask = round(base_rate + spread, 4)
     if random.random() < 0.05: 
         return ask, bid
     return bid, ask
