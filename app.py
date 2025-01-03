@@ -45,7 +45,7 @@ def update_rates():
     while True:
         global_rates = {pair: func() for pair, func in currency_pairs.items()}
         print("Rates updated:", global_rates)
-        time.sleep(5)
+        time.sleep(random.uniform(1, 15))
 
 @app.before_first_request
 def start_rate_updates():
