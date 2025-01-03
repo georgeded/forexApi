@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_socketio import SocketIO, emit
 import random
 import threading
@@ -40,21 +40,15 @@ currencies = {currency for pair in currency_pairs for currency in pair.split('/'
 global_rates = {pair: func() for pair, func in currency_pairs.items()}
 
 def update_rates():
-    global global_rates
     while True:
-        global_rates = {pair: func() for pair, func in currency_pairs.items()}
-        socketio.emit('rate_update', {'rates': global_rates})  # Emitting rates update
+        for pair, func in currency_pairs.items():
+            global_rates[pair] = func()
+        socketio.emit('rate_update', {'rates': global_rates})
         print("Rates updated:", global_rates)
-        time.sleep(5)  # Update every 5 seconds
-
-@app.route('/')
-def hello():
-    return "Hello, this is the Forex API Service."
+        time.sleep(5)
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
-    remote_addr = request.remote_addr
-    print(f"HTTP request from {remote_addr}")
     return jsonify({
         "currencies": sorted(list(currencies)),
         "rates": global_rates
@@ -62,8 +56,7 @@ def get_forex_rates():
 
 @socketio.on('connect')
 def on_connect():
-    remote_addr = request.remote_addr
-    print(f"WebSocket client connected from {remote_addr}")
+    print('Client connected')
 
 @socketio.on('disconnect')
 def on_disconnect():
