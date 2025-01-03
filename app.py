@@ -42,8 +42,8 @@ global_rates = {}
 
 
 def initialize_rates():
-    """Initialize ask and bid rates for all currency pairs."""
     global global_rates
+    global_rates = {}
     for pair, func in currency_pairs.items():
         base, quote = pair.split("/")
         midpoint = func()
@@ -52,14 +52,12 @@ def initialize_rates():
         
         global_rates[pair] = {"ask": ask, "bid": bid}
         
-        # Calculate reciprocal rates
         reciprocal_ask = round(1 / bid, 4)
         reciprocal_bid = round(1 / ask, 4)
         global_rates[f"{quote}/{base}"] = {"ask": reciprocal_ask, "bid": reciprocal_bid}
 
 
 def update_rates():
-    """Update ask and bid rates dynamically while maintaining consistency."""
     global global_rates
     while True:
         for pair, func in currency_pairs.items():
@@ -70,7 +68,6 @@ def update_rates():
             
             global_rates[pair] = {"ask": ask, "bid": bid}
             
-            # Update reciprocal rates
             reciprocal_ask = round(1 / bid, 4)
             reciprocal_bid = round(1 / ask, 4)
             global_rates[f"{quote}/{base}"] = {"ask": reciprocal_ask, "bid": reciprocal_bid}
@@ -91,5 +88,4 @@ def get_forex_rates():
 if __name__ == '__main__':
     initialize_rates()
     threading.Thread(target=update_rates, daemon=True).start()
-
     app.run(debug=True, port=5000)
