@@ -5,15 +5,6 @@ import time
 
 app = Flask(__name__)
 
-def generate_bid_ask(base_rate):
-    if random.random() < 0.1:  # 10% chance to form a bigger negative cycle
-        spread = base_rate * random.uniform(0.5, 1.0)  # much wider spread
-    else:
-        spread = base_rate * random.uniform(0.0005, 0.3)  # normal spread
-    bid = round(base_rate - spread, 4)
-    ask = round(base_rate + spread, 4)
-    return bid, ask
-
 currency_pairs = {
     "USD/EUR": lambda: round(random.uniform(0.8, 1.2), 4),
     "EUR/GBP": lambda: round(random.uniform(0.7, 0.9), 4),
@@ -47,17 +38,16 @@ for pair in currency_pairs.keys():
     base, quote = pair.split("/")
     currencies.update([base, quote])
 
-global_rates = {pair: {"rate": func(), "bid": None, "ask": None} for pair, func in currency_pairs.items()}
+global_rates = {pair: {"rate": func()} for pair, func in currency_pairs.items()}
 
 def update_rates():
     global global_rates
     while True:
         for pair, func in currency_pairs.items():
             rate = func()
-            bid, ask = generate_bid_ask(rate)
-            global_rates[pair] = {"rate": rate, "bid": bid, "ask": ask}
+            global_rates[pair] = {"rate": rate}
         print("Rates updated:", global_rates)
-        time.sleep(5)
+        time.sleep(random.uniform(5, 15))
 
 update_thread_started = False
 
