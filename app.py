@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_socketio import SocketIO, emit
 import random
 import threading
@@ -35,10 +35,7 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.7, 7.9), 4),
 }
 
-currencies = set()
-for pair in currency_pairs.keys():
-    base, quote = pair.split("/")
-    currencies.update([base, quote])
+currencies = {currency for pair in currency_pairs for currency in pair.split('/')}
 
 global_rates = {pair: func() for pair, func in currency_pairs.items()}
 
@@ -46,12 +43,15 @@ def update_rates():
     global global_rates
     while True:
         global_rates = {pair: func() for pair, func in currency_pairs.items()}
-        socketio.emit('rate_update', {'rates': global_rates})  # Emitting rates update to all connected clients
+        socketio.emit('rate_update', {'rates': global_rates})  # Emitting rates update
         print("Rates updated:", global_rates)
         time.sleep(5)  # Update every 5 seconds
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
+    # Log the IP address for each HTTP request
+    remote_addr = request.remote_addr
+    print(f"HTTP request from {remote_addr}")
     return jsonify({
         "currencies": sorted(list(currencies)),
         "rates": global_rates
@@ -59,7 +59,9 @@ def get_forex_rates():
 
 @socketio.on('connect')
 def on_connect():
-    print('Client connected')
+    # Access the request context to get client address
+    remote_addr = request.remote_addr
+    print(f"WebSocket client connected from {remote_addr}")
 
 @socketio.on('disconnect')
 def on_disconnect():
