@@ -38,25 +38,58 @@ for pair in currency_pairs.keys():
     base, quote = pair.split("/")
     currencies.update([base, quote])
 
-global_rates = {pair: func() for pair, func in currency_pairs.items()}
+global_rates = {}
+
+
+def initialize_rates():
+    """Initialize ask and bid rates for all currency pairs."""
+    global global_rates
+    for pair, func in currency_pairs.items():
+        base, quote = pair.split("/")
+        midpoint = func()
+        ask = round(midpoint * random.uniform(1.001, 1.005), 4)
+        bid = round(midpoint * random.uniform(0.995, 0.999), 4)
+        
+        global_rates[pair] = {"ask": ask, "bid": bid}
+        
+        # Calculate reciprocal rates
+        reciprocal_ask = round(1 / bid, 4)
+        reciprocal_bid = round(1 / ask, 4)
+        global_rates[f"{quote}/{base}"] = {"ask": reciprocal_ask, "bid": reciprocal_bid}
+
 
 def update_rates():
+    """Update ask and bid rates dynamically while maintaining consistency."""
     global global_rates
     while True:
-        global_rates = {pair: func() for pair, func in currency_pairs.items()}
+        for pair, func in currency_pairs.items():
+            base, quote = pair.split("/")
+            midpoint = func()
+            ask = round(midpoint * random.uniform(1.001, 1.005), 4)
+            bid = round(midpoint * random.uniform(0.995, 0.999), 4)
+            
+            global_rates[pair] = {"ask": ask, "bid": bid}
+            
+            # Update reciprocal rates
+            reciprocal_ask = round(1 / bid, 4)
+            reciprocal_bid = round(1 / ask, 4)
+            global_rates[f"{quote}/{base}"] = {"ask": reciprocal_ask, "bid": reciprocal_bid}
+        
         print("Rates updated:", global_rates)
         time.sleep(5)
 
-@app.before_first_request
-def start_rate_updates():
-    threading.Thread(target=update_rates, daemon=True).start()
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
+    """API endpoint to fetch Forex rates."""
     return jsonify({
         "currencies": sorted(list(currencies)),
         "rates": global_rates
     })
 
+
 if __name__ == '__main__':
+    initialize_rates()
+    threading.Thread(target=update_rates, daemon=True).start()
+
     app.run(debug=True, port=5000)
