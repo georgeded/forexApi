@@ -1,24 +1,26 @@
-# Forex Exchange Rates API
+# Forex Simulated API
 
-A simple simulated Forex Exchange Rates API built with Flask. The API dynamically generates exchange rates for various currency pairs and updates the rates every 5 seconds.
+This Forex Simulated API provides real-time simulated foreign exchange rates for various currency pairs. The rates are dynamically generated, providing both ask and bid prices for each pair. This API is intended for testing and simulation purposes in financial applications and educational projects.
 
 ## Features
-- Provides exchange rates for multiple currency pairs.
-- Dynamically updates rates every 5 seconds.
-- Simple API endpoint to fetch the latest rates.
-- Includes a list of supported currencies.
 
-## API Endpoint
-### `GET /api/rates`
-- **Description**: Fetches the current exchange rates and the list of supported currencies.
-- **Response**:
-  ```json
-  {
-    "currencies": ["USD", "EUR", "GBP", "JPY", "CHF", ...],
-    "rates": {
-      "USD/EUR": 1.1234,
-      "EUR/GBP": 0.8765,
-      "GBP/USD": 1.2345,
-      ...
-    }
-  }
+- **Dynamic Rates:** Simulates real-time fluctuations in forex rates with ask and bid values.
+- **Wide Range of Currencies:** Supports multiple currency pairs including major currencies like USD, EUR, GBP, and exotic pairs.
+- **RESTful API:** Easy to use RESTful API to fetch the latest forex rates.
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.x
+- Flask
+- Requests (for testing the API externally)
+
+### Installation
+
+Clone the repository to your local machine:
+
+```bash
+git clone https://github.com/yourgithubusername/forexApi.git
+cd forexApi
+
