@@ -33,6 +33,13 @@ currency_pairs = {
     "USD/HKD": lambda: round(random.uniform(7.82, 7.88), 4),
 }
 
+# Ensure no negative cycles by setting the reverse rates to the reciprocal of the original rates
+for pair in list(currency_pairs.keys()):
+    base, quote = pair.split("/")
+    reverse_pair = f"{quote}/{base}"
+    if reverse_pair not in currency_pairs:
+        currency_pairs[reverse_pair] = lambda rate=currency_pairs[pair](): round(1 / rate, 4 if len(reverse_pair.split("/")[1]) == 3 else 6)
+
 currencies = set()
 for pair in currency_pairs.keys():
     base, quote = pair.split("/")
