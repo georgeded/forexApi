@@ -1,10 +1,15 @@
-
 from flask import Flask, jsonify
 import random
 import threading
 import time
 
 app = Flask(__name__)
+
+def generate_bid_ask(base_rate):
+    spread = base_rate * random.uniform(0.0005, 0.3) #wide spread
+    bid = round(base_rate - spread, 4)
+    ask = round(base_rate + spread, 4)
+    return bid, ask
 
 currency_pairs = {
     "USD/EUR": lambda: round(random.uniform(0.8, 1.2), 4),
@@ -39,18 +44,26 @@ for pair in currency_pairs.keys():
     base, quote = pair.split("/")
     currencies.update([base, quote])
 
-global_rates = {pair: func() for pair, func in currency_pairs.items()}
+global_rates = {pair: {"rate": func(), "bid": None, "ask": None} for pair, func in currency_pairs.items()}
 
 def update_rates():
     global global_rates
     while True:
-        global_rates = {pair: func() for pair, func in currency_pairs.items()}
+        for pair, func in currency_pairs.items():
+            rate = func()
+            bid, ask = generate_bid_ask(rate)
+            global_rates[pair] = {"rate": rate, "bid": bid, "ask": ask}
         print("Rates updated:", global_rates)
         time.sleep(5)
 
-@app.before_first_request
+update_thread_started = False
+
+@app.before_request
 def start_rate_updates():
-    threading.Thread(target=update_rates, daemon=True).start()
+    global update_thread_started
+    if not update_thread_started:
+        threading.Thread(target=update_rates, daemon=True).start()
+        update_thread_started = True
 
 @app.route('/api/rates', methods=['GET'])
 def get_forex_rates():
