@@ -1,11 +1,9 @@
 from flask import Flask, jsonify
-from flask_socketio import SocketIO, emit
 import random
 import threading
 import time
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 
 currency_pairs = {
     "USD/EUR": lambda: round(random.uniform(0.8, 1.2), 4),
